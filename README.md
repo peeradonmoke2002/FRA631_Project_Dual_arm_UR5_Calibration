@@ -1,7 +1,7 @@
 # FRA631 Project Dual arm UR5 Calibration
 Repo for Calibration between camera and UR5e (Robot Arm)
 
-# Installation
+## Installation
 
 step 1: Clone the repository
 
@@ -32,7 +32,7 @@ step 3: Install the required packages
 pip install -r requirements.txt
 ```
 
-# Usage
+## Usage
 
 1. Make sure you have the UR5e robot arm and the camera set up and connected to your computer.
 2. Make sure you clear the workspace of the robot arm and camera.
