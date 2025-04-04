@@ -31,3 +31,13 @@ step 3: Install the required packages
 ```bash
 pip install -r requirements.txt
 ```
+
+# Usage
+
+1. Make sure you have the UR5e robot arm and the camera set up and connected to your computer.
+2. Make sure you clear the workspace of the robot arm and camera.
+3. Run the code using the command:
+
+```bash
+python main.py
+```
