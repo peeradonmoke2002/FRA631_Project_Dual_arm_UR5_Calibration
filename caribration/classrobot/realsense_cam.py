@@ -1,8 +1,6 @@
 import pyrealsense2 as rs
 import cv2
-import cv2.aruco as aruco
 import numpy as np
-import sys
 from .point3d import Point3D
 import json
 import os
@@ -15,34 +13,61 @@ json_string = str(jsonObj).replace("'", '\"')
 
 class RealsenseCam:
     def __init__(self, width: int = 640, height: int = 480, fps: int = 30):
+        self.width = width
+        self.height = height
+        self.fps = fps
+        self.pipeline = None
+        self.config = None
+        self.profile = None
+        self.align = None
+        self.align_depth = None 
+        self.init_cam()
+        print("RealsenseCam initialized with width: {}, height: {}, fps: {}".format(width, height, fps))
+  
+
+    def init_cam(self):
         """
         Initialize the RealSense camera pipeline with both color and depth streams.
-        
-        Parameters:
-            width (int): Width of the streams in pixels.
-            height (int): Height of the streams in pixels.
-            fps (int): Frame rate.
+        This method is called in the constructor.
         """
-        self.pipeline = rs.pipeline()
-        self.config = rs.config()
+        try:
+            self.pipeline = rs.pipeline()
+            self.config = rs.config()
 
-        # Enable both color and depth streams.
-        self.config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
-        self.config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
-        
-        # Start the pipeline and get the profile.
-        self.profile = self.pipeline.start(self.config)
-        
-        # Create an align object to align depth frames to the color frame.
-        self.align = rs.align(rs.stream.color)
-        
-        # Get the device and load advanced mode settings.
-        dev = self.profile.get_device()
-        advnc_mode = rs.rs400_advanced_mode(dev)
-        if not advnc_mode.is_enabled():
-            advnc_mode.toggle_advanced_mode(True)
-        advnc_mode.load_json(json_string)
-        print("RealSense camera started with aligned color and depth streams.")
+            if self.pipeline is None or self.config is None:
+                raise RuntimeError("Failed to create RealSense pipeline or config.")
+
+            # Enable color and depth streams before starting the pipeline
+            self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
+            self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
+
+            # Start the pipeline and get the profile
+            self.profile = self.pipeline.start(self.config)
+
+            # Align depth to color
+            self.align = rs.align(rs.stream.color)
+            self.align_depth = rs.align(rs.stream.depth)
+
+            # Get device and enable advanced mode
+            dev = self.profile.get_device()
+
+            if not dev:
+                raise RuntimeError("Failed to get RealSense device.")
+
+            advnc_mode = rs.rs400_advanced_mode(dev)
+            if not advnc_mode.is_enabled():
+                print("Enabling advanced mode...")
+                advnc_mode.toggle_advanced_mode(True)
+
+            # Load settings from config JSON
+            advnc_mode.load_json(json_string)
+
+            print(f"RealSense camera started with aligned color and depth streams "
+                f"({self.width}x{self.height}@{self.fps}fps)")
+
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize RealSense camera: {e}")
+            raise  # Or use sys.exit(1) if running as a standalone script
 
     def get_color_frame(self) -> np.ndarray:
         frames = self.pipeline.wait_for_frames()
@@ -122,18 +147,36 @@ class RealsenseCam:
         """
         Stop the RealSense pipeline.
         """
-        self.pipeline.stop()
-        print("RealSense camera stopped.")
+        if self.pipeline is None:
+            print("Pipeline is not initialized.")
+            return
+        if self.pipeline:
+            self.pipeline.stop()
+            self.pipeline = None
+            self.config = None
+            self.profile = None
+            self.align = None
+            self.align_depth = None 
+            print("RealSense camera stopped.")
+        else:
+            print("Pipeline is already stopped or not initialized.")
+ 
 
     def restart(self):
         """
         Restart the RealSense pipeline.
         """
+        if self.pipeline is None:
+            print("Pipeline is not initialized. Cannot restart.")
+            return
+        print("Restarting RealSense camera...")
+        # Stop the pipeline before reinitializing
         self.stop()
-        self.pipeline = rs.pipeline()
-        self.config = rs.config()
-        self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-        self.config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        self.profile = self.pipeline.start(self.config)
-        self.align = rs.align(rs.stream.color)
+        self.init_cam()
         print("RealSense camera restarted with aligned color and depth streams.")
+
+    def __del__(self):
+        self.stop()
+
+
+

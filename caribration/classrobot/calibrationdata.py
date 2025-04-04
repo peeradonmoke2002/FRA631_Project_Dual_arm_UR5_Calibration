@@ -1,16 +1,14 @@
-import cv2
-import numpy as np
-import random
-import math
+from dataclasses import dataclass
+from typing import Optional
 from .point3d import Point3D
-from typing import Optional, List
 
+@dataclass
 class CalibrationData:
-    def __init__(self, pos: float, CCS: Point3D, AC: Point3D, GS: Optional[Point3D]=None):
-        self.pos = pos
-        self.CCS = CCS  # Camera coordinate system point
-        self.AC = AC    # Actual (robot) coordinate point
-        self.GS = GS
+    pos: float
+    CCS: Point3D  # Camera Coordinate System
+    AC: Point3D   # Actual Coordinate (robot)
+    GS: Optional[Point3D] = None  # estimated Actual Coordinate (robot)
 
-    def __repr__(self):
-        return f"CalibrationData(pos={self.pos}, CCS={self.CCS}, AC={self.AC})"
+    def __repr__(self) -> str:
+        return (f"CalibrationData(pos={self.pos}, "
+                f"CCS={self.CCS}, AC={self.AC}, GS={self.GS})")

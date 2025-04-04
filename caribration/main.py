@@ -1,7 +1,11 @@
 # main.py
 import time
 import cv2 as cv
-from classrobot import robot_movement, realsense_cam, point3d
+import sys
+import pathlib
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
+from classrobot import robot_movement, realsense_cam
 import os
 
 class calibrationUR5e():
@@ -220,7 +224,7 @@ class calibrationUR5e():
 
 
 
-    def collect_data(self, state: int, filename: str = "calibration_data.csv") -> bool:
+    def collect_data(self, state: int) -> bool:
         """
         Collect calibration data at the current robot state.
         This function collects:
@@ -230,10 +234,10 @@ class calibrationUR5e():
            Pos, ccs_x, ccs_y, ccs_z, ac_x, ac_y, ac_z
         Parameters:
             state (int): A state number or position index.
-            filename (str): The CSV file to which data is appended.
         Returns:
             bool: True if data collection is successful.
         """
+        filename = os.path.join(os.path.dirname(__file__), "data", "calibration_data.csv")
         print(f"Collecting data for state {state} ...")
         # Get camera measurement (ccs)
         ccs = self.cam_relasense()  # This should return a Point3D object

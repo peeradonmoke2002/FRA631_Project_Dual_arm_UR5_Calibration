@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import pyrealsense2 as rs
-import time  # Import time module for sleep
+import time 
 
 # Configure and start the RealSense pipeline
 pipeline = rs.pipeline()

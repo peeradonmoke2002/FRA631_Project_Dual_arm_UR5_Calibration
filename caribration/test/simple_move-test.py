@@ -1,9 +1,11 @@
-import time
-from classrobot import robot_movement
-import roboticstoolbox as rtb
 from roboticstoolbox import RevoluteDH, DHRobot
 from spatialmath import SE3
 import numpy as np
+import pathlib
+import sys
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
+from classrobot import robot_movement
 
 def main():
         # Link 1
@@ -98,10 +100,10 @@ def main():
     # print("Position in avatar reference frame:", pos_left_avatar)
 
 
-    print(tcp_offset)
-    pos_left[1]+=0.01
-    print(pos_left)
-    robot.robot_moveL(pos_left,0.01)
+    # print(tcp_offset)
+    # pos_left[1]+=0.01
+    # print(pos_left)
+    # robot.robot_moveL(pos_left,0.01)
 
 
 if __name__ == "__main__":

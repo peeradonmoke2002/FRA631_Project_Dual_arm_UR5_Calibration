@@ -190,38 +190,5 @@ class RobotControl:
         translated = rotated + np.array([0.7, 0.0, 0.87])
 
         return translated.tolist()
-    # def moveL_until_limit(self, start_pose: list, direction: list, distance_limit: float,
-    #                       step_distance: float, capture_status_func=None,
-    #                       state_delay: float = 0.0, speed: float = 0.25,
-    #                       acceleration: float = 1.2) -> list:
-    #     commanded_poses = []
-    #     current_pose = start_pose.copy()
-    #     total_distance = 0.0
+    
 
-    #     mag = math.sqrt(sum(d ** 2 for d in direction))
-    #     if mag == 0:
-    #         raise ValueError("Direction vector cannot be zero.")
-    #     norm_direction = [d / mag for d in direction]
-
-    #     while total_distance < distance_limit:
-    #         next_pose = current_pose.copy()
-    #         for i in range(3):
-    #             next_pose[i] += norm_direction[i] * step_distance
-
-    #         self.moveL(next_pose, speed, acceleration)
-    #         commanded_poses.append(next_pose)
-
-    #         if capture_status_func is not None:
-    #             print("Waiting for capture status...")
-    #             while not capture_status_func():
-    #                 time.sleep(0.1)
-    #             print("Capture complete.")
-
-    #         if state_delay > 0:
-    #             print(f"Waiting additional state delay of {state_delay} seconds...")
-    #             time.sleep(state_delay)
-
-    #         current_pose = next_pose
-    #         total_distance += step_distance
-
-    #     return commanded_poses

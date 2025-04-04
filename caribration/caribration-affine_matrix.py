@@ -2,13 +2,17 @@ import csv
 import numpy as np
 import math
 import os
+import sys
+import pathlib
+
+sys.path.append(str(pathlib.Path(__file__).parent.parent))
 from classrobot.point3d import Point3D
 from classrobot.calibrationdata import CalibrationData
-from classrobot.caribration_utility import Calibrator
+from caribration.classrobot.caribration_tool import Calibrator
 
 
 # Path to your CSV file
-filename = r"C:\Users\COMPUTER3\Desktop\fra631-project\calibration_data.csv"
+filename = os.path.join(os.path.dirname(__file__), "data", "calibration_data.csv")
 if not os.path.exists(filename):
     raise FileNotFoundError(f"The file '{filename}' does not exist. Please check the path.")
 

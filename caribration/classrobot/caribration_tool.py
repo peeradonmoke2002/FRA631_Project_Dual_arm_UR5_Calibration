@@ -2,12 +2,17 @@ import cv2
 import numpy as np
 import random
 import math
+import logging
 from typing import List, Tuple, Optional
 from .point3d import Point3D
 from .calibrationdata import CalibrationData
 
 
-class Calibrator:
+class CalibratorTools:
+    """
+    Provides tools for calibrating 3D coordinate systems using Point3D data.
+    Supports transformation estimation, evaluation, and random sampling-based optimization.
+    """
     def __init__(self, calibration_data_list: List[CalibrationData]):
         self.calibration_data_list = calibration_data_list
 
@@ -55,8 +60,9 @@ class Calibrator:
                                                transformed_homo[1],
                                                transformed_homo[2]))
         return transformed_points
-
-    def cal_mean_square_error_xyz(self,
+    
+    @staticmethod
+    def cal_mean_square_error_xyz(
                                   target_points: List[Point3D],
                                   transformed_points: List[Point3D]) -> List[float]:
         """
@@ -141,7 +147,7 @@ class Calibrator:
                 continue
 
             transformed_points = self.apply_affine_transformation(CCS_points, transformation_matrix)
-            current_rms_errors = self.cal_mean_square_error_xyz(AC_points, transformed_points)
+            current_rms_errors = CalibratorTools.cal_mean_square_error_xyz(AC_points, transformed_points)
             overall_rms = current_rms_errors[3]
 
             if overall_rms < best_rms_error:
@@ -151,8 +157,7 @@ class Calibrator:
                 rms_errors = current_rms_errors
 
             iterations += 1
-            # Optional: print iteration details for debugging.
-            print(f"Iteration {iterations}: Best Overall RMS = {best_rms_error}")
+            logging.info(f"Iteration {iterations}: Best Overall RMS = {best_rms_error}")
 
         return best_transformation_matrix, best_rms_error, rms_errors, selected_positions, best_transformed_points
 
