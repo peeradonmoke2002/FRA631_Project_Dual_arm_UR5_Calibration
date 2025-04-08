@@ -10,8 +10,9 @@ cam = realsense_cam.RealsenseCam()
 
 # ArUco detection
 aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_1000)
-image_marked, point3d = cam.get_board_pose(aruco_dict)
-
+image_marked, point3d, point2d, depth = cam.get_board_pose(aruco_dict)
+print("Point2D:", point2d)
+print("Depth:", depth)
 # Show image if available
 if image_marked is not None:
     cv2.imshow("Detected Board", image_marked)

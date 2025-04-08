@@ -62,60 +62,161 @@ class calibrationUR5e():
         print("Moving to home position...")
         self.robot.robot_moveL(self.HOME_POS, self.speed)
 
+    # def moveL_square(self):
+    #         """
+    #         Move the robot through a 3x3 grid defined by 4 reference points that form a perfect square.
+            
 
+    #         The grid is computed via bilinear interpolation on the x-z plane (y remains constant).
+    #         The grid layout is as follows (row, col):
+    #             (0,0)   (0,1)   (0,2)     --> Top row
+    #             (1,0)   (1,1)   (1,2)     --> Middle row
+    #             (2,0)   (2,1)   (2,2)     --> Bottom row
+                
+    #         In this updated version, the home (starting) position is set to the bottom-left cell, (2,0).
+    #         The move order (clockwise spiral starting at (2,0)) is defined as:
+    #             (2,0), (2,1), (2,2), (1,2), (0,2), (0,1), (0,0), (1,0), (1,1)
+                
+    #         At each grid cell, data is collected before proceeding.
+    #         """
+
+    #         #--------Test positions for the grid corners (TL, TR, BL, BR)--------
+    #         # TL = [0.6379, 0.1841, 0.3519]
+    #         # TR = [0.9326, 0.1841, 0.3519]
+    #         # BL = [0.6379, 0.1841, 0.0573]
+    #         # BR = [0.9326, 0.1841, 0.0573]
+    #         # TL = [0.9322103843777579, 0.18395298037313315, 0.35192282556710097]
+    #         # TR = [0.6379185573572154, 0.18395298037313315, 0.35192282556710097]
+    #         # BL = [0.6379046407898854, 0.18395298037313315, -0.4311363888217942]
+    #         # BR = [0.9329119096579548, 0.18395298037313315, -0.4310893355873706]
+    #         #-------------------------
+    #         #--------- Real positions for the grid corners (TL, TR, BL, BR)---------
+    #         pos_home = [0.7011797304915488, 0.18427154391614353, 0.17217411213036665]
+    #         BL = [0.6158402179629584, 0.18426921633782534, 0.3510680386492011]
+    #         TL = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
+    #         TR = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
+    #         BR = [0.6158402179629584, 0.18424774957164802, -0.43708867396716417]
+    #         # Fixed orientation (RPY) for the robot's end-effector.
+    #         RPY = [-1.7318443587261685, 0.686842056802218, -1.7312759524010408]
+    #         #-----------------------------------------------------------
+    #         # Build a 3x3 grid using bilinear interpolation.
+    #         # u (horizontal) varies from 0 (left) to 1 (right)
+    #         # v (vertical) varies from 0 (top) to 1 (bottom)
+    #         grid = []  # grid[i][j] will be the position at row i, col j.
+    #         for i in range(3):
+    #             row_positions = []
+    #             v = i / 2.0  # 0.0, 0.5, 1.0 for rows 0, 1, 2
+    #             for j in range(3):
+    #                 u = j / 2.0  # 0.0, 0.5, 1.0 for columns 0, 1, 2
+    #                 x = (1 - u) * (1 - v) * TL[0] + u * (1 - v) * TR[0] + (1 - u) * v * BL[0] + u * v * BR[0]
+    #                 y = (TL[1] + TR[1] + BL[1] + BR[1]) / 4.0  # constant
+    #                 z = (1 - u) * (1 - v) * TL[2] + u * (1 - v) * TR[2] + (1 - u) * v * BL[2] + u * v * BR[2]
+    #                 row_positions.append([x, y, z])
+    #             grid.append(row_positions)
+
+    #         # Define move order with home at bottom-left (grid cell (2,0)) and a clockwise spiral.
+    #         move_order = [
+    #             (2, 0),  # Home: bottom-left
+    #             (2, 1),  # bottom-center
+    #             (2, 2),  # bottom-right
+    #             (1, 2),  # middle-right
+    #             (0, 2),  # top-right
+    #             (0, 1),  # top-center
+    #             (0, 0),  # top-left
+    #             (1, 0),  # middle-left
+    #             (1, 1)   # center
+    #         ]
+
+    #         # Loop over each grid cell in the defined move order.
+    #         for idx, (i, j) in enumerate(move_order):
+    #             pos = grid[i][j]
+    #             # Combine the position and fixed orientation (RPY) into a single target list.
+    #             target = pos + RPY
+    #             print(f"Moving to grid cell ({i},{j}) - Target: {target}")
+    #             self.robot.robot_moveL(target, self.speed)
+    #             time.sleep(3)  # Pause to allow settling
+
+    #             # Define a unique state number; here simply idx+1.
+    #             state = idx + 1
+    #             if self.collect_data(state=state):
+    #                 print(f"Data collection successful for state {state}.")
+    #             else:
+    #                 print(f"Data collection failed for state {state}. Halting sequence.")
+    #                 return
+                
     def moveL_square(self):
         """
-        Move the robot through a 3x3 grid defined by 4 reference points that form a perfect square.
+        Move the robot through a 3x3 grid defined by 4 reference points that form a square,
+        and repeat this pattern over 3 vertical planes (each separated by 10 cm).
         
-
-        The grid is computed via bilinear interpolation on the x-z plane (y remains constant).
-        The grid layout is as follows (row, col):
-            (0,0)   (0,1)   (0,2)     --> Top row
-            (1,0)   (1,1)   (1,2)     --> Middle row
-            (2,0)   (2,1)   (2,2)     --> Bottom row
-            
-        In this updated version, the home (starting) position is set to the bottom-left cell, (2,0).
-        The move order (clockwise spiral starting at (2,0)) is defined as:
-            (2,0), (2,1), (2,2), (1,2), (0,2), (0,1), (0,0), (1,0), (1,1)
-            
-        At each grid cell, data is collected before proceeding.
-        """
-
-        #--------Test positions for the grid corners (TL, TR, BL, BR)--------
-        # TL = [0.6379, 0.1841, 0.3519]
-        # TR = [0.9326, 0.1841, 0.3519]
-        # BL = [0.6379, 0.1841, 0.0573]
-        # BR = [0.9326, 0.1841, 0.0573]
-        # TL = [0.9322103843777579, 0.18395298037313315, 0.35192282556710097]
-        # TR = [0.6379185573572154, 0.18395298037313315, 0.35192282556710097]
-        # BL = [0.6379046407898854, 0.18395298037313315, -0.4311363888217942]
-        # BR = [0.9329119096579548, 0.18395298037313315, -0.4310893355873706]
-        #-------------------------
-        #--------- Real positions for the grid corners (TL, TR, BL, BR)---------
-        pos_home = [0.7011797304915488, 0.18427154391614353, 0.17217411213036665]
+        The grid is computed by bilinear interpolation on the x-z plane (y is set from the reference)
+        using the following real reference positions (assumed in robot coordinates):
+        
+        pos_home (reference home) = [0.7011797304915488, 0.18427154391614353, 0.17217411213036665]
         BL = [0.6391839708261646, 0.18426921633782534, 0.3510680386492011]
         TL = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
         TR = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
         BR = [0.6158402179629584, 0.18424774957164802, -0.4371210612556637]
-        # Fixed orientation (RPY) for the robot's end-effector.
+        
+        Here, the reference points are used only for interpolation on x and z.
+        The fixed orientation (RPY) is defined as:
+            RPY = [-1.7318443587261685, 0.686842056802218, -1.7312759524010408]
+        
+        For the grid:
+        - u (horizontal parameter) varies from 0 (left) to 1 (right)
+        - v (vertical parameter) varies from 0 (top) to 1 (bottom)
+        
+        The 3x3 grid (rows, cols) is laid out as follows:
+            (0,0)   (0,1)   (0,2)     --> Top row
+            (1,0)   (1,1)   (1,2)     --> Middle row
+            (2,0)   (2,1)   (2,2)     --> Bottom row
+            
+        In this version, the home (starting) cell is (2,0) – the bottom‑left cell.
+        
+        Then, an outer loop moves the robot vertically over 3 planes. Each plane’s y coordinate
+        is offset by 10 cm (0.10 m) downward relative to the previous plane.
+        
+        At each grid cell, the robot moves to the target position (which is given by the interpolated
+        x, y, z combined with the fixed RPY), and data is collected. Only if data collection returns True
+        does the sequence continue.
+        """
+        
+        # ----- Reference data -----
+        # Use the provided "home" and reference corner positions.
+        pos_home = [0.7011797304915488, 0.18427154391614353, 0.17217411213036665]
+        # BL_ref = [0.6391839708261646, 0.18426921633782534, 0.3510680386492011]
+        # TL_ref = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
+        # TR_ref = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
+        # BR_ref = [0.6158402179629584, 0.18424774957164802, -0.4371210612556637]
+        BL_ref = [0.6158402179629584, 0.18426921633782534, 0.3510680386492011]
+        TL_ref = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
+        TR_ref = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
+        BR_ref = [0.6158402179629584, 0.18424774957164802, -0.43708867396716417]
         RPY = [-1.7318443587261685, 0.686842056802218, -1.7312759524010408]
-        #-----------------------------------------------------------
-        # Build a 3x3 grid using bilinear interpolation.
-        # u (horizontal) varies from 0 (left) to 1 (right)
-        # v (vertical) varies from 0 (top) to 1 (bottom)
-        grid = []  # grid[i][j] will be the position at row i, col j.
+        
+        # For grid interpolation, we use the four corners.
+        # Here, interpret the corners for x and z interpolation:
+        # Let’s assume:
+        #   TL for top-left, TR for top-right, BL for bottom-left, and BR for bottom-right.
+        # In our given numbers, note that the y values are nearly identical; so we will fix y to the average.
+        avg_y = (TL_ref[1] + TR_ref[1] + BL_ref[1] + BR_ref[1]) / 4.0
+        
+        # ----- Build a 3x3 grid on the x-z plane via bilinear interpolation -----
+        grid = []  # grid[i][j] corresponds to position at row i, col j.
         for i in range(3):
             row_positions = []
-            v = i / 2.0  # 0.0, 0.5, 1.0 for rows 0, 1, 2
+            v = i / 2.0  # v = 0.0, 0.5, 1.0 for rows 0,1,2
             for j in range(3):
-                u = j / 2.0  # 0.0, 0.5, 1.0 for columns 0, 1, 2
-                x = (1 - u) * (1 - v) * TL[0] + u * (1 - v) * TR[0] + (1 - u) * v * BL[0] + u * v * BR[0]
-                y = (TL[1] + TR[1] + BL[1] + BR[1]) / 4.0  # constant
-                z = (1 - u) * (1 - v) * TL[2] + u * (1 - v) * TR[2] + (1 - u) * v * BL[2] + u * v * BR[2]
-                row_positions.append([x, y, z])
+                u = j / 2.0  # u = 0.0, 0.5, 1.0 for columns 0,1,2
+                # Bilinear interpolation: x and z; y is fixed to avg_y.
+                x = (1 - u) * (1 - v) * TL_ref[0] + u * (1 - v) * TR_ref[0] + (1 - u) * v * BL_ref[0] + u * v * BR_ref[0]
+                z = (1 - u) * (1 - v) * TL_ref[2] + u * (1 - v) * TR_ref[2] + (1 - u) * v * BL_ref[2] + u * v * BR_ref[2]
+                row_positions.append([x, avg_y, z])
             grid.append(row_positions)
-
-        # Define move order with home at bottom-left (grid cell (2,0)) and a clockwise spiral.
+        
+        # ----- Define move order for the grid (for each plane) -----
+        # We want home at bottom-left; thus grid cell (2,0) is home.
+        # Define move order in a clockwise spiral:
         move_order = [
             (2, 0),  # Home: bottom-left
             (2, 1),  # bottom-center
@@ -127,25 +228,48 @@ class calibrationUR5e():
             (1, 0),  # middle-left
             (1, 1)   # center
         ]
-
-        # Loop over each grid cell in the defined move order.
-        for idx, (i, j) in enumerate(move_order):
-            pos = grid[i][j]
-            # Combine the position and fixed orientation (RPY) into a single target list.
-            target = pos + RPY
-            print(f"Moving to grid cell ({i},{j}) - Target: {target}")
-            self.robot.robot_moveL(target, self.speed)
-            time.sleep(3)  # Pause to allow settling
-
-            # Define a unique state number; here simply idx+1.
-            state = idx + 1
-            if self.collect_data(state=state):
-                print(f"Data collection successful for state {state}.")
-            else:
-                print(f"Data collection failed for state {state}. Halting sequence.")
-                return
-
         
+        # ----- Outer loop: iterate over 3 vertical planes -----
+        # For each plane, we adjust the y coordinate relative to the original grid.
+        vertical_distance = 0.10  # 10 cm per plane
+        num_planes = 3
+        
+        # Connect to the robot.
+        # robot = robot_movement.RobotControl()
+        # robot.robot_init(self.robot_ip)
+        
+        # For state numbering, we can use: state = plane_idx * 10 + grid_index + 1
+        for plane_idx in range(num_planes):
+            # For each plane, adjust the grid: the new y becomes avg_y - (plane_idx * vertical_distance)
+            plane_offset_y = avg_y - (plane_idx * vertical_distance)
+            print(f"--- Moving on plane {plane_idx+1} with y = {plane_offset_y:.4f} ---")
+            
+            # For this plane, update the grid positions (only y changes)
+            plane_grid = []
+            for i in range(3):
+                row_positions = []
+                for j in range(3):
+                    pos = grid[i][j].copy()
+                    pos[1] = plane_offset_y
+                    row_positions.append(pos)
+                plane_grid.append(row_positions)
+            
+            # Iterate over the move order for this plane.
+            for idx, (i, j) in enumerate(move_order):
+                pos = plane_grid[i][j]
+                # Combine position and fixed orientation (RPY) into the target.
+                target = pos + RPY
+                state = plane_idx * 10 + idx + 1
+                print(f"Moving to plane {plane_idx+1} grid cell ({i},{j}) - Target: {target}")
+                self.robot.robot_moveL(target, self.speed)
+                time.sleep(3)  # Pause for the robot to settle
+                
+                if self.collect_data(state=state):
+                    print(f"Data collection successful for state {state}.")
+                else:
+                    print(f"Data collection failed for state {state}. Halting sequence.")
+                    # self.robot.robot_release()
+                    return
 
 
     # def moveL_square(self):
@@ -244,7 +368,7 @@ class calibrationUR5e():
         ccs = ccs.to_list()
         ccs = self.robot.my_transform_position_to_world_ref(ccs)
         # Get robot TCP (ac)
-        ac = self.get_robot_TCP()  # This returns a list [x, y, z]
+        ac = self.get_robot_TCP()  # This returns a list [x, y, z] maker
         ac = self.robot.my_convert_position_from_left_to_avatar(ac)
         
         # Create a CSV row.
@@ -264,10 +388,10 @@ def main():
     calibration = calibrationUR5e()
 
     calibration.move_home()
-    time.sleep(3)
-    calibration.moveL_square()
-    time.sleep(3)
-    calibration.move_home()
+    # time.sleep(3)
+    # calibration.moveL_square()
+    # time.sleep(3)
+    # calibration.move_home()
     calibration.stop_all()
 
 if __name__ == "__main__":

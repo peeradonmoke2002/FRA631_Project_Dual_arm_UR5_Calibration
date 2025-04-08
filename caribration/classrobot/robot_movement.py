@@ -122,7 +122,7 @@ class RobotControl:
         Convert TCP Position from Robot (Left) Ref to Avatar Ref
         '''
         
-        # swap axis
+        # swap axis z    y   x
         res = [-position[2], -position[1], -position[0]]
 
         # translation
@@ -131,64 +131,76 @@ class RobotControl:
 
         return res
     
-    def transl(self, x, y, z):
-        """Create a homogeneous translation matrix."""
-        return np.array([
-            [1, 0, 0, x],
-            [0, 1, 0, y],
-            [0, 0, 1, z],
-            [0, 0, 0, 1]
-        ])
-
-    def troty(self, theta):
-        """Create a homogeneous rotation matrix about Y-axis."""
-        return np.array([
-            [ np.cos(theta), 0, np.sin(theta), 0],
-            [ 0,             1, 0,             0],
-            [-np.sin(theta), 0, np.cos(theta), 0],
-            [ 0,             0, 0,             1]
-        ])
-
-    def trotz(self, theta):
-        """Create a homogeneous rotation matrix about Z-axis."""
-        return np.array([
-            [np.cos(theta), -np.sin(theta), 0, 0],
-            [np.sin(theta),  np.cos(theta), 0, 0],
-            [0,              0,             1, 0],
-            [0,              0,             0, 1]
-        ])
+    def my_convert_position_from_avatar_to_left(self, position: list[float]) -> list[float]:
+        '''
+        Convert TCP Position from Avatar Reference back to Robot (Left) Reference.
+        This is the inverse of my_convert_position_from_left_to_avatar.
         
-    def my_transform_position_to_world_ref(self,position: list[float]) -> list[float]:
+        Given (from the original conversion):
+        Avatar[0] = -Robot[2] - 0.055
+        Avatar[1] = -Robot[1] + 0.400
+        Avatar[2] = -Robot[0]
+        
+        Then the inverse conversion is:
+        Robot[0] = -Avatar[2]
+        Robot[1] = 0.400 - Avatar[1]
+        Robot[2] = -(Avatar[0] + 0.055)
         '''
-        Convert position from local robot reference to world (avatar) reference.
-        Applies: 
-        - Rotation around Z by -pi/2 (trotz)
-        - Rotation around Y by pi (troty)
-        - Translation by (0.7, 0, 0.87)
-        '''
+        res = [-position[2], 0.400 - position[1], -(position[0] + 0.055)]
+        return res
 
-        # Build rotation matrices
+    
+    # def my_convert_postion_from_maker_to_TCP(self, position: list[float]) -> list[float]:
+    #     '''
+    #     Convert TCP Position from Marker Ref to Robot (Left) Ref
+    #     '''
+        
+    #     # swap axis
+    #     res = [position[0], position[2], position[1]]
+
+    #     # translation
+    #     res[0] += 0.18
+    #     res[1] -= 0.18
+
+    #     return res
+    
+
+        
+    def my_transform_position_to_world_ref(self, position: list[float]) -> list[float]:
+        """
+        Convert position from local robot reference to world (avatar) reference.
+        Applies:
+        - Rotation about Z by -pi/2
+        - Rotation about Y by pi
+        - Translation by (0.75, 0, 1.51)
+        
+        The conversion is done as:
+            p_world = R * p_robot + t
+        where R = Ry @ Rz and t = [0.75, 0.0, 1.51].
+        """
+        from math import cos, sin, pi
+        import numpy as np
+        
+        # Rotation about Z by -pi/2:
         Rz = np.array([
             [cos(-pi/2), -sin(-pi/2), 0],
             [sin(-pi/2),  cos(-pi/2), 0],
             [0,           0,          1]
         ])
-
+        # Rotation about Y by pi:
         Ry = np.array([
             [ cos(pi), 0, sin(pi)],
             [ 0,       1, 0      ],
             [-sin(pi), 0, cos(pi)]
         ])
-
-        # Combined rotation: Ry @ Rz
+        # Combined rotation:
         R = Ry @ Rz
+        # Translation vector:
+        t = np.array([0.75, 0.0, 1.51])
+        
+        # Compute final world position:
+        pos_final = R @ np.array(position) + t
+        return pos_final.tolist()
 
-        # Apply rotation
-        rotated = R @ np.array(position)
-
-        # Apply translation
-        translated = rotated + np.array([0.7, 0.0, 0.87])
-
-        return translated.tolist()
     
 

@@ -158,6 +158,7 @@ class CalibratorTools:
 
             iterations += 1
             logging.info(f"Iteration {iterations}: Best Overall RMS = {best_rms_error}")
+            print(f"Iteration {iterations}: Best Overall RMS = {best_rms_error}")
 
         return best_transformation_matrix, best_rms_error, rms_errors, selected_positions, best_transformed_points
 

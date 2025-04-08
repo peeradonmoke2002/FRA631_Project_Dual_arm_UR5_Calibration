@@ -128,6 +128,7 @@ class RealsenseCam:
 
             cx = int(np.mean(all_cx))
             cy = int(np.mean(all_cy))
+            point2d = [cx, cy]
             print(cx,cy)
             depth = depth_frame.get_distance(cx, cy)
             if depth > 0:

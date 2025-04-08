@@ -33,7 +33,7 @@ intrinsics = color_frame.profile.as_video_stream_profile().intrinsics
 print("Camera intrinsics:", intrinsics)
 
 # Load the ArUco dictionary and create detector parameters
-aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_50)
 parameters = cv2.aruco.DetectorParameters()
 
 # Create the ArUco detector

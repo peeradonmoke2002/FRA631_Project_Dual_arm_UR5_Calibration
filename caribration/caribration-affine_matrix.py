@@ -8,11 +8,11 @@ import pathlib
 sys.path.append(str(pathlib.Path(__file__).parent.parent))
 from classrobot.point3d import Point3D
 from classrobot.calibrationdata import CalibrationData
-from caribration.classrobot.caribration_tool import Calibrator
+from classrobot.caribration_tool import CalibratorTools
 
 
 # Path to your CSV file
-filename = os.path.join(os.path.dirname(__file__), "data", "calibration_data.csv")
+filename = pathlib.Path(__file__).parent / "data" / "calibration_data.csv"
 if not os.path.exists(filename):
     raise FileNotFoundError(f"The file '{filename}' does not exist. Please check the path.")
 
@@ -45,12 +45,12 @@ with open(filename, 'r', newline='', encoding="utf-8-sig") as csvfile:
 print(f"Loaded {len(calibration_data_list)} calibration data points.")
 
 # Create an instance of the Calibrator class using the loaded data.
-calibrator = Calibrator(calibration_data_list)
+calibrator = CalibratorTools(calibration_data_list)
 
 # Set calibration parameters.
 num_selected_positions = len(calibration_data_list)  # using all loaded data points
 num_iterations = 20000
-target_rms_error = 0.1  # Adjust threshold as needed
+target_rms_error = 0.001  # Adjust threshold as needed
 
 # Run the calibration search.
 best_matrix, best_rms, rms_errors, selected_positions, transformed_points = calibrator.find_best_matrix(
