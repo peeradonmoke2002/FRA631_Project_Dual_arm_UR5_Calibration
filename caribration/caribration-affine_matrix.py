@@ -64,6 +64,7 @@ data = {
 }
 
 config_path = pathlib.Path(__file__).parent.parent / "config" / "best_matrix.json"
+print(f"Saving best matrix to {config_path}")
 
 if not os.path.exists(config_path.parent):
     os.makedirs(config_path.parent)

@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import pyrealsense2 as rs
+import pathlib
+
 
 # Configure and start the RealSense pipeline
 pipeline = rs.pipeline()
@@ -44,7 +46,7 @@ print("Camera intrinsics:", intrinsics)
 img_height, img_width = color_image.shape[:2]
 
 # Load the ArUco dictionary and create detector parameters
-aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_50)
 parameters = cv2.aruco.DetectorParameters()
 
 # Create the ArUco detector
@@ -87,8 +89,9 @@ if ids is not None and len(ids) > 0:
 else:
     print("No markers detected.")
 
-# Save the captured image with overlays
-filename = "./images/captured_image.png"
+
+# Path to your CSV file
+filename = pathlib.Path(__file__).parent.parent / "images" / "captured_image.png"
 cv2.imwrite(filename, color_image)
 print(f"Image saved as {filename}")
 
