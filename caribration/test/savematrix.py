@@ -13,3 +13,14 @@ data = {
 
 with open(r'FRA631_Project_Dual_arm_UR5_Calibration\caribration\config\best_matrix.json', 'w') as f:
     json.dump(data, f, indent=4)
+
+
+# To load the matrix from the JSON file, you can use the following code:
+# ----
+# with open('matrix.json', 'r') as f:
+#     loaded_data = json.load(f)
+#     name = loaded_data["name"]
+#     matrix = np.array(loaded_data["matrix"])
+
+# print("Name:", name)
+# print("Matrix:\n", matrix)
