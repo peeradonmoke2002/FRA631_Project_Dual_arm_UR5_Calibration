@@ -7,8 +7,7 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent))
 from classrobot import realsense_cam
 from classrobot import robot_movement
 from classrobot.point3d import Point3D
-from classrobot.calibrationdata import CalibrationData
-from classrobot.caribration_tool import CalibratorTools
+import json
 
 
 def cal_error_xyz(target: Point3D, transformed: Point3D) -> List[float]:
@@ -36,18 +35,15 @@ robot = robot_movement.RobotControl()
 robot.robot_init(robot_ip)
 
 
-
-
-
 # Init cam 
 cam = realsense_cam.RealsenseCam()
 
 
 # ArUco detection
-aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
+aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_1000)
 image_marked, ccs = cam.get_board_pose(aruco_dict)
 point3d = ccs.to_list()
-point3d = robot.my_transform_position_to_world_ref(point3d)
+# point3d = robot.my_transform_position_to_world_ref(point3d)
 
 # best_matrix = np.array([[ 5.18471136e-02, -9.98244336e-01,  6.88817547e-01, -1.16411659e-01],
 #                         [ 3.35885879e-03,  1.63514282e-04,  3.81926098e-02,  3.32313474e-02],
@@ -57,11 +53,24 @@ point3d = robot.my_transform_position_to_world_ref(point3d)
 #                         [ 0.1508613,   0.02166607,  1.01799482, -0.076001  ],
 #                         [-0.98476372,  0.00648918,  0.07938951, -0.101862  ],
 #                         [ 0.0,         0.0,         0.0,         1.0       ]])
-best_matrix = np.array([[ 0.00465481, -0.99626089,  0.01972409, -0.08235386],
-                        [ 0.1348973,   0.009654,    1.02464258, -0.06076352],
-                        [-0.98427042,  0.00608958,  0.08377368, -0.10207071],
-                        [ 0.0,         0.0,         0.0,         1.0       ]])
+# best_matrix = np.array([[ 0.00465481, -0.99626089,  0.01972409, -0.08235386],
+#                         [ 0.1348973,   0.009654,    1.02464258, -0.06076352],
+#                         [-0.98427042,  0.00608958,  0.08377368, -0.10207071],
+#                         [ 0.0,         0.0,         0.0,         1.0       ]])
+# best_matrix = np.array([[ 0.0091902,   0.98683012, -0.08573875,  0.69742562],
+#                         [ 0.01638979, -0.11234373, -1.02432666, -1.19305022],
+#                         [-0.99304297,  0.00872967, -0.01697439, -0.00232298],
+#                         [ 0.0,         0.0,         0.0,         1.0       ]])
 
+
+config_path = pathlib.Path(__file__).parent.parent / "config" / "best_matrix.json"
+with open(config_path, 'r') as f:
+    loaded_data = json.load(f)
+    name = loaded_data["name"]
+    best_matrix = np.array(loaded_data["matrix"])
+
+print("Name:", name)
+print("Matrix:\n", best_matrix)
 point3d_array = np.array([point3d[0], point3d[1], point3d[2]])
 point3d_array = np.append(point3d_array, 1.0)  # Convert to homogeneous coordinates
 final_point = best_matrix @ point3d_array
@@ -70,7 +79,7 @@ print("Transformed point:", final_point[:3])
 
 pos_left = robot.robot_get_position()
 pos_left = [pos_left[0]+0.18, pos_left[1]+0.18, pos_left[2]]
-pos_left = robot.my_convert_position_from_left_to_avatar(pos_left)
+# pos_left = robot.my_convert_position_from_left_to_avatar(pos_left)
 
 print("Robot Position:", pos_left[:3])
 
@@ -82,9 +91,8 @@ print("RMS Error Y:", rms_error[1])
 print("RMS Error Z:", rms_error[2])
 print("Overall RMS Error:", rms_error[3])
 
-final_point_robot_real = robot.my_convert_position_from_avatar_to_left([final_point.x, final_point.y, final_point.z])
-print("Final Point in Robot Left Ref:", final_point_robot_real[:3])
-# Show image if available
+# final_point_robot_real = robot.my_convert_position_from_avatar_to_left([final_point.x, final_point.y, final_point.z])
+# print("Final Point in Robot Left Ref:", final_point_robot_real[:3])
 if image_marked is not None:
     cv2.imshow("Detected Board", image_marked)
     cv2.waitKey(10000)

@@ -4,6 +4,7 @@ import math
 import os
 import sys
 import pathlib
+import json
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent))
 from classrobot.point3d import Point3D
@@ -50,12 +51,25 @@ calibrator = CalibratorTools(calibration_data_list)
 # Set calibration parameters.
 num_selected_positions = len(calibration_data_list)  # using all loaded data points
 num_iterations = 20000
-target_rms_error = 0.001  # Adjust threshold as needed
-
+target_rms_error = 0.003  
 # Run the calibration search.
 best_matrix, best_rms, rms_errors, selected_positions, transformed_points = calibrator.find_best_matrix(
     num_selected_positions, num_iterations, target_rms_error
 )
+
+
+data = {
+    "name": "camera_to_world_transform",
+    "matrix": best_matrix.tolist()
+}
+
+config_path = pathlib.Path(__file__).parent.parent / "config" / "best_matrix.json"
+
+if not os.path.exists(config_path.parent):
+    os.makedirs(config_path.parent)
+
+with open(config_path, 'w') as f:
+    json.dump(data, f, indent=4)
 
 # Output the results.
 if best_matrix is not None:
@@ -66,7 +80,3 @@ if best_matrix is not None:
     #print("Selected Positions Indices:", selected_positions)
 else:
     print("Failed to estimate a valid transformation.")
-
-
-
-# cam = Point3D(-0.2095291167497635, -0.05519441142678261, 0.6840000152587891)

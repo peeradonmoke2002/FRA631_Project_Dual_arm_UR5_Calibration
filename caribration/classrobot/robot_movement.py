@@ -148,24 +148,21 @@ class RobotControl:
         '''
         res = [-position[2], 0.400 - position[1], -(position[0] + 0.055)]
         return res
-
     
-    # def my_convert_postion_from_maker_to_TCP(self, position: list[float]) -> list[float]:
-    #     '''
-    #     Convert TCP Position from Marker Ref to Robot (Left) Ref
-    #     '''
-        
-    #     # swap axis
-    #     res = [position[0], position[2], position[1]]
-
-    #     # translation
-    #     res[0] += 0.18
-    #     res[1] -= 0.18
-
-    #     return res
+    def convert_gripper_to_maker(self, position: list[float]) -> list[float]:
+        '''
+        Convert TCP Position from Gripper Ref to Marker Ref
+        '''
     
+        res = [position[0], position[1], position[2]]
 
-        
+        # translation
+        res[0] += 0.18
+        res[1] += 0.18
+
+        return res
+
+            
     def my_transform_position_to_world_ref(self, position: list[float]) -> list[float]:
         """
         Convert position from local robot reference to world (avatar) reference.
