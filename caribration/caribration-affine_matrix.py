@@ -57,7 +57,6 @@ best_matrix, best_rms, rms_errors, selected_positions, transformed_points = cali
     num_selected_positions, num_iterations, target_rms_error
 )
 
-
 data = {
     "name": "camera_to_TCP_transform",
     "matrix": best_matrix.tolist()
@@ -66,9 +65,10 @@ data = {
 config_path = pathlib.Path(__file__).parent.parent / "config" / "best_matrix.json"
 print(f"Saving best matrix to {config_path}")
 
-if not os.path.exists(config_path.parent):
-    os.makedirs(config_path.parent)
+# Ensure the parent directory exists (but do not recreate if it already exists).
+config_path.parent.mkdir(parents=True, exist_ok=True)
 
+# Write to the file, replacing its contents if it already exists.
 with open(config_path, 'w') as f:
     json.dump(data, f, indent=4)
 
