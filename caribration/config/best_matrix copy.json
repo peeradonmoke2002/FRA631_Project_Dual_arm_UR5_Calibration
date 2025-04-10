@@ -1,5 +1,5 @@
 {
-    "name": "camera_to_world_transform",
+    "name": "camera_to_TCP_transform",
     "matrix": [
         [
             0.00465481,
