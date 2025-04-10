@@ -5,7 +5,10 @@ import time
 import math
 from typing import Optional, List
 import numpy as np
-from math import pi, cos, sin
+from math import pi
+from spatialmath import SE3
+from scipy.spatial.transform import Rotation as R
+from spatialmath.base import troty, trotz, trotx
 
 class RobotControl:
     def __init__(self):
@@ -117,21 +120,76 @@ class RobotControl:
         self._ROBOT_CON_.stopL(a, asynchronous)
 
 
+
+
+
+    def convert_position_from_left_to_world(self, position: list[float]) -> list[float]:
+        """
+        Convert TCP Position from Robot (Left) Reference to World Reference.
+        
+        Assumptions:
+        - The input position is provided in the left robot's frame with the ordering [x, z, y]:
+                x: forward (+x = forward, -x = backward)
+                z: left/right (+z = left, -z = right)
+                y: vertical (–y = up, +y = down)
+        - The output is in a world coordinate frame with standard [x, y, z] order.
+        
+        The conversion is done in two steps:
+        1. Reorder the input from [x, z, y] to [x, y, z]. (If needed, here we assume that if the
+            input has more than 3 values, only the first three are used.)
+        2. Apply a transformation to convert the left frame to the world frame.
+            In this example:
+            - A rotation Rx by –pi/2 (about the x-axis) swaps the y and z axes.
+            - A translation T = SE3(0.0, 0.0575, 0.4) is applied.
+            The overall transformation is defined as: transformation = T * Rx,
+            and we use its inverse to go from left coordinates to world coordinates.
+        
+        Returns:
+        A list of 3 floats representing the position in world coordinates.
+        """
+        # Ensure that only the first three coordinates are used.
+        pos_array = np.array(position)[:3]  # Now pos_array has shape (3,)        
+        # If your input is truly in [x, z, y] order, reorder it to [x, y, z]
+        # Uncomment the following line if reordering is required:
+        # pos_array = np.array([pos_array[0], pos_array[2], pos_array[1]])
+        
+        # Define the rotation about X by -pi/2 (swaps y and z)
+        Rx = SE3(trotx(pi/2))
+        
+        # Define the translation vector
+        T = SE3(0.0, 0.4, 0.0)
+        
+        # Compose the full transformation: from world frame to left frame
+        transformation = T * Rx
+        # Invert the transformation to go from left frame to world frame
+        inv_transformation = transformation.inv()
+        
+        # Convert the 3D point to homogeneous coordinates (4x1 vector)
+        pos_h = np.append(pos_array, 1)  # Now shape is (4,)
+        
+        # Apply the inverse transformation: multiply the 4x4 transformation matrix by the 4x1 vector
+        pos_transformed = inv_transformation.A @ pos_h  # Result is a 4-element vector
+        
+        # Extract the [x, y, z] coordinates and return them as a list
+        return pos_transformed[:3].tolist()
+
+
+    
+
     def my_convert_position_from_left_to_avatar(self,position: list[float]) -> list[float]:
         '''
         Convert TCP Position from Robot (Left) Ref to Avatar Ref
         '''
         
-        # swap axis z    y   x
-        res = [-position[2], -position[1], -position[0]]
+        # swap axis
+        res	= [-position[2], -position[1], -position[0]]
 
         # translation
-        res[0] -= 0.055
-        res[1] += 0.400
-
+        res[0]	-=	0.055
+        res[1]	+=	0.400
         return res
     
-    def my_convert_position_from_avatar_to_left(self, position: list[float]) -> list[float]:
+    def convert_position_from_avatar_to_left(self, position: list[float]) -> list[float]:
         '''
         Convert TCP Position from Avatar Reference back to Robot (Left) Reference.
         This is the inverse of my_convert_position_from_left_to_avatar.
@@ -149,6 +207,32 @@ class RobotControl:
         res = [-position[2], 0.400 - position[1], -(position[0] + 0.055)]
         return res
     
+    def convert_avatar_to_world(self, position: list[float]) -> list[float]:
+        '''
+        Convert TCP Position from Avatar Ref to World Ref
+        '''
+        res = [position[0], position[1], position[2]]
+
+        # translation
+        res[1] -= 0.055
+        res[2] -= 0.400
+
+        return res
+    
+    def convert_world_to_avatar(self, position: list[float]) -> list[float]:
+        '''
+        Convert world Ref to Avatar Ref
+        '''
+        # swap axis z    y   x
+        res = [position[0], position[1], position[2]]
+
+        # translation
+        res[0] += 0.75
+        res[1] -= 0.0
+        res[2] -= 1.51
+
+        return res
+    
     def convert_gripper_to_maker(self, position: list[float]) -> list[float]:
         '''
         Convert TCP Position from Gripper Ref to Marker Ref
@@ -163,41 +247,36 @@ class RobotControl:
         return res
 
             
-    def my_transform_position_to_world_ref(self, position: list[float]) -> list[float]:
+    def convert_cam_to_world(self, position: list[float]) -> list[float]:
         """
-        Convert position from local robot reference to world (avatar) reference.
-        Applies:
-        - Rotation about Z by -pi/2
-        - Rotation about Y by pi
-        - Translation by (0.75, 0, 1.51)
-        
-        The conversion is done as:
-            p_world = R * p_robot + t
-        where R = Ry @ Rz and t = [0.75, 0.0, 1.51].
+        Convert a camera coordinate (position vector) to a world coordinate.
+
+        The transformation consists of:
+        - A rotation about Z by -pi/2 (Rz)
+        - A rotation about Y by pi (Ry)
+        - A translation given by [0.75, 0.0, 1.51]
+
+        The overall transformation is T * (Ry * Rz).
+
+        Parameters:
+        position : list of 3 floats representing the camera frame coordinates.
+
+        Returns:
+        list of 3 floats representing the position in the world coordinate frame.
         """
-        from math import cos, sin, pi
-        import numpy as np
-        
         # Rotation about Z by -pi/2:
-        Rz = np.array([
-            [cos(-pi/2), -sin(-pi/2), 0],
-            [sin(-pi/2),  cos(-pi/2), 0],
-            [0,           0,          1]
-        ])
-        # Rotation about Y by pi:
-        Ry = np.array([
-            [ cos(pi), 0, sin(pi)],
-            [ 0,       1, 0      ],
-            [-sin(pi), 0, cos(pi)]
-        ])
-        # Combined rotation:
-        R = Ry @ Rz
+        Rz = SE3(trotz(pi/2))
+        Rx = SE3(trotx(pi))
+        # Combined rotation: first Rz, then Ry
+        R = Rx @ Rz
         # Translation vector:
-        t = np.array([0.75, 0.0, 1.51])
+        T = SE3(0.83, 0.02, 1.52)
+        # Compose the complete transformation
+        transformation = T * R
+        # Compute final world position: the SE3 class overloads * to transform a point.
+        pos_final = transformation * np.array(position)
         
-        # Compute final world position:
-        pos_final = R @ np.array(position) + t
-        return pos_final.tolist()
+        return pos_final
 
     
 

@@ -12,9 +12,6 @@ class calibrationUR5e():
     def __init__(self):
         # End effector home position (6 DOF) and other test positions
         self.HOME_POS = [0.701172053107018, 0.184272460738082, 0.1721568294843568, -1.7318488600590023, 0.686830145115122, -1.731258978679887]
-        self.TEST = [0.801172053107018, 0.084272460738082, 0.1721568294843568, -1.7318488600590023, 0.686830145115122, -1.731258978679887]
-        self.TEST2 = [0.8011561071792352, 0.08430097586065964, 0.1721584901349059, -1.73183931957943, 0.6868204659244422, -1.7312337199195151]
-        self.HOME_POS2 = [25.35, -124.37, -95, -139.88, -66, 135.7]
         self.robot_ip = "192.168.200.10"
         self.speed = 0.1
         self.acceleration = 1.2
@@ -104,10 +101,6 @@ class calibrationUR5e():
         # ----- Reference data -----
         # Use the provided "home" and reference corner positions.
         pos_home = [0.7011797304915488, 0.18427154391614353, 0.17217411213036665]
-        # BL_ref = [0.6391839708261646, 0.18426921633782534, 0.3510680386492011]
-        # TL_ref = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
-        # TR_ref = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
-        # BR_ref = [0.6158402179629584, 0.18424774957164802, -0.4371210612556637]
         BL_ref = [0.6158402179629584, 0.18426921633782534, 0.3510680386492011]
         TL_ref = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
         TR_ref = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
@@ -209,14 +202,23 @@ class calibrationUR5e():
         """
         filename = os.path.join(os.path.dirname(__file__), "data", "calibration_data.csv")
         print(f"Collecting data for state {state} ...")
+
+
+        # data collection ------
+        # ccs = camera coordinate system (camera pose)
+        # ac = actual coordinate system (robot TCP pose)
         # Get camera measurement (ccs)
         ccs = self.cam_relasense()  # This should return a Point3D object
         ccs = ccs.to_list()
-        # ccs = self.robot.my_transform_position_to_world_ref(ccs)
+        # cam -> to world 
+        ccs = self.robot.convert_cam_to_world(ccs)
         # Get robot TCP (ac)
         ac = self.get_robot_TCP()  # This returns a list [x, y, z] maker
-        # ac = self.robot.my_convert_position_from_left_to_avatar(ac)
-        
+        # TCP -> world
+        ac = self.robot.convert_position_from_left_to_world(ac)
+        # -- end data collection ------
+
+
         # Create a CSV row.
         data_row = [state, ccs[0], ccs[1], ccs[2], ac[0], ac[1], ac[2]]
         print("Collected data row:", data_row)

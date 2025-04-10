@@ -51,7 +51,7 @@ calibrator = CalibratorTools(calibration_data_list)
 # Set calibration parameters.
 num_selected_positions = len(calibration_data_list)  # using all loaded data points
 num_iterations = 20000
-target_rms_error = 0.003  
+target_rms_error = 0.03
 # Run the calibration search.
 best_matrix, best_rms, rms_errors, selected_positions, transformed_points = calibrator.find_best_matrix(
     num_selected_positions, num_iterations, target_rms_error
