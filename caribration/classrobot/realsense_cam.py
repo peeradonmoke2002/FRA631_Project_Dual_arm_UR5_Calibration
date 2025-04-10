@@ -12,8 +12,6 @@ config_path = os.path.join(os.path.dirname(__file__), "..", "config", "cam.json"
 jsonObj = json.load(open(config_path))
 json_string = str(jsonObj).replace("'", '\"')
 
-
-
 class RealsenseCam:
     def __init__(self, width: int = 640, height: int = 480, fps: int = 30):
         self.width = width
@@ -78,7 +76,6 @@ class RealsenseCam:
             print(f"[ERROR] Failed to initialize RealSense camera: {e}")
             raise  # Or use sys.exit(1) if running as a standalone script
 
-
     def get_color_frame(self) -> np.ndarray:
         frames = self.pipeline.wait_for_frames()
         aligned_frames = self.align.process(frames)
@@ -110,7 +107,6 @@ class RealsenseCam:
         color_image = np.asanyarray(color_frame.get_data())
         # Return the color image, the raw depth frame, and the intrinsics.
         return color_image, depth_frame, depth_intrinsics
-
 
     def get_color_intrinsics(self, depth_intrinsics) -> tuple:
         """
@@ -148,9 +144,6 @@ class RealsenseCam:
                                   [0, 0, 1]], dtype=np.float32)
         dist_coeffs = np.array(depth_intrinsics.coeffs, dtype=np.float32)
         return camera_matrix, dist_coeffs
-
-
-
 
     def get_board_pose(self, aruco_dict):
         color_image, depth_frame, depth_intrinsics = self.get_color_and_depth_frames()
@@ -289,92 +282,6 @@ class RealsenseCam:
             print("No markers detected.")
             return output_image, None, Point3D(0, 0, 0)
 
-
-
-
-    # def get_board_pose_estimate(self, aruco_dict, camera_matrix, dist_coeffs, marker_length=0.05):
-    #     """
-    #     Estimates the 6DoF pose of the detected Aruco marker board using estimatePoseSingleMarkers.
-        
-    #     Parameters:
-    #     - aruco_dict: The dictionary used for marker detection 
-    #         (e.g., cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)).
-    #     - camera_matrix: The camera intrinsic matrix (3x3 numpy array).
-    #     - dist_coeffs: Distortion coefficients (numpy array, e.g., np.zeros((5,1), dtype=np.float32)).
-    #     - marker_length: The actual side length of the marker in meters (default is 0.05).
-        
-    #     Returns:
-    #     - output_image: The color image with detected markers and the coordinate axes drawn.
-    #     - rvec: The rotation vector for the first detected marker (if available) or None.
-    #     - tvec: The translation (as a Point3D) for the first detected marker (if available) or a Point3D at (0,0,0).
-    #     """
-    #     # Capture color and depth frames.
-    #     color_image, depth_frame, _ = self.get_color_and_depth_frames()
-    #     if color_image is None or depth_frame is None:
-    #         print("Failed to capture color/depth.")
-    #         return None, None, Point3D(0, 0, 0)
-        
-    #     gray = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-        
-    #     # Create an Aruco detector and detect markers.
-    #     parameters = cv2.aruco.DetectorParameters()
-    #     detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
-    #     corners, ids, rejected = detector.detectMarkers(gray)
-    #     output_image = color_image.copy()
-        
-    #     if ids is not None and len(ids) > 0:
-    #         # Draw detected markers for visualization.
-    #         cv2.aruco.drawDetectedMarkers(output_image, corners, ids)
-            
-    #         # Use estimatePoseSingleMarkers to obtain rvecs and tvecs for each marker.
-    #         rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-    #             corners,
-    #             markerLength=marker_length,
-    #             cameraMatrix=camera_matrix,
-    #             distCoeffs=dist_coeffs
-    #         )
-            
-    #         # Check if pose estimation returned any data.
-    #         if rvecs is not None and len(rvecs) > 0:
-    #             # For each detected marker, draw coordinate axes on the image.
-    #             for marker_index in range(len(rvecs)):
-    #                 cv2.drawFrameAxes(output_image, camera_matrix, dist_coeffs, 
-    #                                 rvecs[marker_index], tvecs[marker_index], marker_length)
-                
-    #             # Use the first marker's pose as an example.
-    #             # tvecs is of shape (num_markers, 1, 3); extract the first one.
-    #             tvec = tvecs[0]
-    #             rvec = rvecs[0]
-    #             # Convert the translation to a Point3D.
-    #             point3d = Point3D(tvec[0][0], tvec[0][1], tvec[0][2])
-                
-    #             # Convert the rotation vector to a rotation matrix.
-    #             rot_matrix, _ = cv2.Rodrigues(rvec)
-    #             # If you want to work with quaternions and Euler angles, you can do so. For example,
-    #             # using the scipy.spatial.transform.Rotation package:
-    #             #
-    #             # from scipy.spatial.transform import Rotation as R
-    #             r = R.from_matrix(rot_matrix)
-    #             quat = r.as_quat()   # returns in (x, y, z, w) format
-    #             roll, pitch, yaw = self.euler_from_quaternion(quat[0], quat[1], quat[2], quat[3])
-    #             print("Roll (deg):", math.degrees(roll))
-    #             print("Pitch (deg):", math.degrees(pitch))
-    #             print("Yaw (deg):", math.degrees(yaw))
-    #             #
-    #             # For now, we simply print the raw rotation vector.
-    #             print("Estimated translation (tvec):", point3d)
-    #             print("Estimated rotation vector (rvec):", rvec.ravel())
-                
-    #             return output_image, rvec, point3d
-    #         else:
-    #             print("estimatePoseSingleMarkers returned no pose data.")
-    #             return output_image, None, Point3D(0, 0, 0)
-    #     else:
-    #         print("No markers detected.")
-    #         return output_image, None, Point3D(0, 0, 0)
-
-
-
     def euler_from_quaternion(self,x, y, z, w):
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
@@ -397,7 +304,6 @@ class RealsenseCam:
             
         return roll_x, pitch_y, yaw_z # in radians
     
-
     def get_imu_frames(self):
         """
         Retrieves accelerometer and gyroscope data.
@@ -415,12 +321,6 @@ class RealsenseCam:
         else:
             print("Failed to retrieve IMU data.")
             return None, None
-
-
-
-
-
-
 
     def stop(self):
         """
@@ -443,7 +343,6 @@ class RealsenseCam:
         else:
             print("Pipeline is already stopped or not initialized.")
  
-
     def restart(self):
         """
         Restart the RealSense pipeline.

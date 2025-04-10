@@ -50,8 +50,8 @@ calibrator = CalibratorTools(calibration_data_list)
 
 # Set calibration parameters.
 num_selected_positions = len(calibration_data_list)  # using all loaded data points
-num_iterations = 20000
-target_rms_error = 0.03
+num_iterations = 200000
+target_rms_error = 0.001
 # Run the calibration search.
 best_matrix, best_rms, rms_errors, selected_positions, transformed_points = calibrator.find_best_matrix(
     num_selected_positions, num_iterations, target_rms_error
@@ -59,7 +59,7 @@ best_matrix, best_rms, rms_errors, selected_positions, transformed_points = cali
 
 
 data = {
-    "name": "camera_to_world_transform",
+    "name": "camera_to_TCP_transform",
     "matrix": best_matrix.tolist()
 }
 

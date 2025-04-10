@@ -119,9 +119,9 @@ class RobotControl:
         """Stop linear movement."""
         self._ROBOT_CON_.stopL(a, asynchronous)
 
-
-
-
+    # --------------------------
+    # Convert Parts
+    # --------------------------
 
     def convert_position_from_left_to_world(self, position: list[float]) -> list[float]:
         """
@@ -149,32 +149,20 @@ class RobotControl:
         """
         # Ensure that only the first three coordinates are used.
         pos_array = np.array(position)[:3]  # Now pos_array has shape (3,)        
-        # If your input is truly in [x, z, y] order, reorder it to [x, y, z]
-        # Uncomment the following line if reordering is required:
-        # pos_array = np.array([pos_array[0], pos_array[2], pos_array[1]])
-        
         # Define the rotation about X by -pi/2 (swaps y and z)
         Rx = SE3(trotx(pi/2))
-        
         # Define the translation vector
         T = SE3(0.0, 0.4, 0.0)
-        
         # Compose the full transformation: from world frame to left frame
         transformation = T * Rx
         # Invert the transformation to go from left frame to world frame
         inv_transformation = transformation.inv()
-        
         # Convert the 3D point to homogeneous coordinates (4x1 vector)
         pos_h = np.append(pos_array, 1)  # Now shape is (4,)
-        
         # Apply the inverse transformation: multiply the 4x4 transformation matrix by the 4x1 vector
         pos_transformed = inv_transformation.A @ pos_h  # Result is a 4-element vector
-        
         # Extract the [x, y, z] coordinates and return them as a list
         return pos_transformed[:3].tolist()
-
-
-    
 
     def my_convert_position_from_left_to_avatar(self,position: list[float]) -> list[float]:
         '''
@@ -241,12 +229,11 @@ class RobotControl:
         res = [position[0], position[1], position[2]]
 
         # translation
-        res[0] += 0.18
+        res[0] += 0.185
         res[1] += 0.18
 
         return res
-
-            
+          
     def convert_cam_to_world(self, position: list[float]) -> list[float]:
         """
         Convert a camera coordinate (position vector) to a world coordinate.

@@ -210,12 +210,8 @@ class calibrationUR5e():
         # Get camera measurement (ccs)
         ccs = self.cam_relasense()  # This should return a Point3D object
         ccs = ccs.to_list()
-        # cam -> to world 
-        ccs = self.robot.convert_cam_to_world(ccs)
         # Get robot TCP (ac)
         ac = self.get_robot_TCP()  # This returns a list [x, y, z] maker
-        # TCP -> world
-        ac = self.robot.convert_position_from_left_to_world(ac)
         # -- end data collection ------
 
 
