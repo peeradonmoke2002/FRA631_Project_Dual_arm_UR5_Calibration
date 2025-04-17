@@ -16,10 +16,15 @@ def main():
     # test_object = [0.9072675212299265, 0.3328091640503892, -0.17503151605785447, -1.7318443587261685, 0.686842056802218, -1.7312759524010408]
     test_object = [0.9290549355944916, 0.18427318897339476, -0.16040047488083092, -1.7318443587261685, 0.686842056802218, -1.7312759524010408]
 
+
+    # test moveJ
+    movej_test = [0.8784110513148038, -1.4876313199414897, -2.025614095710221, -2.747657361096037, -0.7397576032396653, 2.3620445068033513]
+    movej_test_home = [0.7144879698753634, -1.9379779301085378, -2.0520489215850874, -2.2720519504942818, -0.9002979437457208, 2.3653039932250968]
     speed = 0.05
     # Move to the desired position
-    print("Moving to position:", np.round(pos_home[:3],3))
-    robot.robot_moveL(pos_home,speed)
+    print("Moving to position:", np.round(pos_left_bottom[:3],3))
+    # robot.robot_moveL(pos_left_bottom,speed)
+    robot.robot_move_j(movej_test_home, speed, 0.05, True)
 
 
 
