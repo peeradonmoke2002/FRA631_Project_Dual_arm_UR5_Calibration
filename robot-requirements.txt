@@ -1,0 +1,8 @@
+opencv-python
+numpy==1.23.5
+matplotlib==3.7
+roboticstoolbox-python
+pandas
+ur-rtde
+pymodbus==3.4.1
+pyserial==3.5
