@@ -29,11 +29,13 @@ venv\Scripts\Activate.ps1
 step 3: Install the required packages
 
 If you are developer 
+
 ```bash
 ./install_requirements.sh dev
 ```
 
 If you are installing on a robot
+
 ```bash
 ./install_requirements.sh robot
 ```
