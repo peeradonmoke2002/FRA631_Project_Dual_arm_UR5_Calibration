@@ -1,191 +1,142 @@
-# FRA631 Project Dual arm UR5 Calibration
-Repo for Calibration between camera and UR5e (Robot Arm)
+# FRA631 Dual Arm UR5 Calibration
 
-## Overview Diagram
+Repository for calibration between a camera and the UR5e robot arm.
 
-![overview_diagram](/caribration/images/overview_diagram_calibration.png)
+## Table of Contents
 
+- [Overview](#overview)
+- [Installation](#installation)
+  - [Step 1: Clone the Repository](#step-1-clone-the-repository)
+  - [Step 2: Setup Virtual Environment](#step-2-setup-virtual-environment)
+  - [Step 3: Install Dependencies](#step-3-install-dependencies)
+- [Calibration Concept](#calibration-concept)
+  - [How It Works](#how-it-works)
+  - [Why Use an Affine Matrix?](#why-use-an-affine-matrix)
+  - [Calibration Steps](#calibration-steps)
+    - [Workspace Setup and Data Collection](#workspace-setup-and-data-collection)
+    - [Calibration with Affine Matrix](#calibration-with-affine-matrix)
+  - [Custom Calibration Tool](#custom-calibration-tool)
+  - [Adjusting TCP Position](#adjusting-tcp-position)
+- [Running Calibration](#running-calibration)
+  - [Configuration (`main.py`)](#configuration-mainpy)
+  - [Data Collection](#data-collection)
+  - [Calculating Affine Matrix](#calculating-affine-matrix)
+- [Calibration Results](#calibration-results)
+- [Conclusion](#conclusion)
+
+## Overview
+
+![Overview Diagram](/caribration/images/overview_diagram_calibration.png)
 
 ## Installation
 
-> [!Note] This project's Python package is only supported on Python 3.11.XX and not beyond this version.
-> To be sure, you can check the version of Python by running the following command in your terminal:
+> [!IMPORTANT]  
+> This Python package supports Python 3.11.x only. 
+> Check your Python version:
 > ```bash
 > python --version
 > ```
 
-step 1: Clone the repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/peeradonmoke2002/FRA631_Project_Dual_arm_UR5_Calibration.git
 ```
 
-step 2: Create a virtual environment and activate it
+### Step 2: Setup Virtual Environment
 
-For Linux or MacOS:
+**Linux/MacOS:**
 
 ```bash
 python3 -m venv calibration_venv
 source calibration_venv/bin/activate
 ```
 
-For Windows:
+**Windows:**
 
-```bash
+```powershell
 set-executionpolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
 python -m venv calibration_venv
 venv\Scripts\Activate.ps1
 ```
 
-step 3: Install the required packages
+### Step 3: Install Dependencies
 
-If you are developer 
+**For Developers:**
 
 ```bash
 pip install -r dev-requirements.txt
 ```
 
-If you are installing on a robot
+**For Robot Installation:**
 
 ```bash
-pip install -r robot-requirements.tx
+pip install -r robot-requirements.txt
 ```
 
-## Concept of Calibration
+## Calibration Concept
 
-### **How it works**
-The robot arm are following the camera’s instructions to reach the right spot. To make this work we need matrix transformation that help camera and robot understand each other. But before that we need to find that matrix transformation by use calibration methods.
+### How It Works
 
-![How_it_work_calibration](caribration/images/How_it_work_calibration.png)
+The robot follows instructions based on camera observations. Calibration aligns the robot and camera coordinates through an affine matrix transformation.
 
+![Calibration Process](/caribration/images/How_it_work_calibration.png)
 
-### **Why use Affine Matrix?**
+### Why Use an Affine Matrix?
 
-To convert between the 3D coordinate systems of a 3D camera and robot arm, an affine matrix is employed. The choice of an affine matrix is justified because it allows for translation, rotation, and scaling (dilation), providing the necessary flexibility to accurately align and adjust the two sets of 3D coordinates
-More information [this link](https://towardsdatascience.com/understanding-transformations-in-computer-vision-b001f49a9e61)
+Affine matrices accommodate translation, rotation, and scaling, crucial for accurately aligning 3D camera and robot arm coordinates.
 
-### **How to Calibrate with Affine Matrix?**
+[Learn More About Affine Matrices](https://towardsdatascience.com/understanding-transformations-in-computer-vision-b001f49a9e61)
 
-1. **Setup workspace and collect data**
+### Calibration Steps
 
-![setupworkspace&collectdata_calibration](caribration/images/setupworkspace&collectdata_calibration.png)
+#### Workspace Setup and Data Collection
 
-Before we can calibrate, we need to create a shared space where the camera and robot can work together.
+![Workspace Setup](/caribration/images/setupworkspace&collectdata_calibration.png)
 
-**Step-by-step:**
+**Steps:**
 
-- **Define 2D Workspace**
-    
-    Place ArUco markers at four corners. This helps the camera see the area the robot will work in.
-    
-- **Define 3D Workspace**
-    
-    From the 2D area, we build a 3D box to show the full space where the robot will move.
-    
-- **Set Waypoints**
-    
-    Choose 27 points inside the 3D space where the robot will move to collect data.
-    
-- **Move and Capture**
-    
-    At each point, the robot moves, and the camera takes a photo.
-    
-    - The **camera** records the marker’s position (X, Y, Z).
-    - The **robot** records its end-effector’s position (X, Y, Z).
-- **Collect Data**
-    
-    We now have 27 matching positions from both camera and robot.
-    
+- **Define 2D Workspace**: Place ArUco markers at four corners.
+- **Extend to 3D Workspace**: Create a 3D space by stacking multiple planes.
+- **Waypoint Selection**: Define 27 waypoints.
+- **Data Collection**: Robot and camera record positions at each waypoint.
 
-This data will be used to calculate the matrix that helps both systems understand each other.
+Data from the robot's TCP and camera markers is saved for calibration.
 
-2. **Step Calibration** 
+#### Calibration with Affine Matrix
 
-![step_calibration_calibration](caribration/images/step_calibration_calibration.png)
+![Calibration Steps](/caribration/images/step_calibration_calibration.png)
 
-Now that we’ve collected the data, it’s time to calibrate. This step helps the robot understand where things are in the camera’s view.
+- Calculate the affine matrix using collected data points.
+- Iterate to minimize RMS error, improving the accuracy of the transformation.
 
-**Before Calibration**
+![Affine Matrix Flowchart](/caribration/images/flowchart_matrix_calibration.png)
 
-At first, the robot doesn’t know how the camera's coordinates match its own. We need to find the **affine matrix** — a special formula that links both systems.
+### Custom Calibration Tool
 
-**Calibration Process**
+A specially designed tool is used to position the marker safely and accurately.
 
-- We use the 27 matching points from both camera and robot.
-- Using these points, we calculate the affine matrix.
-- This matrix includes rotation, translation, and scaling between the two coordinate systems.
+![Calibration Tool](/caribration/images/tool_calibration.png)
 
-![flowchart_matrix_calibration](caribration/images/flowchart_matrix_calibration.png)
+**Advantages:**
 
-The system repeats the process many times:
+- Prevents robot collisions.
+- Ensures stable and clear marker visibility.
+- Improves calibration accuracy.
 
-- It randomly selects points and settings (like threshold and confidence).
-- It calculates the affine matrix and checks the error (called **RMSE**).
-- If the new matrix gives a better (lower) RMSE, we save it.
-- This continues until we reach a good enough result or hit the maximum number of tries.
+![Custom Tool Benefits](/caribration/images/whyuse_custom_made_tool_calibration.png)
 
-In the end, we get the **best affine matrix** that helps the robot understand where objects are from the camera's view.
+### Adjusting TCP Position
 
-**After Calibration**
+TCP (Tool Center Point) position is adjusted to account for the marker offset (18 cm in X and Y).
 
-Once we have the affine matrix:
+![TCP Adjustment](/caribration/images/dimension_tool_calibration.png)
 
-- We can convert any camera position to a robot position.
-- For example, when the camera sees an object, the robot can use the matrix to move to the correct location and pick it up.
+## Running Calibration
 
-## Step to do Calibration
+### Configuration (`main.py`)
 
-1. We use a custom-made tool that holds a marker (like the one in the photo). This tool helps us align the camera and robot.
-
-![tool_calibration](caribration/images/tool_calibration.png)
-
-**Why Use a Custom-Made Tool?**
-
-The custom-made tool solves key problems during calibration:
-
-![whyuse_custom_made_tool_calibration](caribration/images/whyuse_custom_made_tool_calibration.png)
-
-**Without Custom-Made Tool**
-
-- The marker is placed flat on the table.
-- The robot's joint may **crash into the table** while trying to reach it.
-- It’s hard to keep the marker **flat and stable**, which affects accuracy.
-
-**With Custom-Made Tool**
-
-- The tool **raises the marker** to a safe height.
-- It holds the marker **parallel to the table**, helping the camera see it clearly.
-- This setup makes calibration **safer and more precise**.
-
-As shown in the image, the tool helps avoid crashes and ensures better alignment for accurate calibration.
-
-**Adjusting TCP Position to Marker Position**
-
-When collecting data, the robot’s TCP (Tool Center Point) is at the **gripper**, but the marker is held **18 cm away** in both X and Y directions.
-
-To get the correct marker position, we need to **shift the TCP position**:
-
-![dimension_tool_calibration](caribration/images/dimension_tool_calibration.png)
-
-In this case:
-
-- Add **+18 cm in X**
-- Add **+18 cm in Y**
-
-This converts the gripper’s position into the actual **marker position**, which is what we use for calibration.
-
-This step is important to make sure the data from the robot matches the camera correctly.
-
-1. We begin by defining the workspace using **four corner points** in 2D: bottom-left (BL), top-left (TL), top-right (TR), and bottom-right (BR). These positions help outline a flat surface area for the robot to work in. 
-
-After defining the 2D area, we extend it into **3D** by creating multiple planes stacked vertically. In our setup:
-
-- We use **3 planes**, spaced **10 cm apart**.
-- This creates a 3D box where the robot can move and collect data at different heights.
-
-This 3D workspace is used to generate waypoints for the robot to visit during calibration.
-
-Please configure these values in your `main.py` file
+Set workspace reference points and parameters:
 
 ```python
 BL_ref = [0.6158402179629584, 0.18426921633782534, 0.3510680386492011]
@@ -193,51 +144,47 @@ TL_ref = [0.9034970156209872, 0.18431919874933683, 0.3510680386492011]
 TR_ref = [0.9035034184486379, 0.18425659123476879, -0.43708867396716417]
 BR_ref = [0.6158402179629584, 0.18424774957164802, -0.43708867396716417]
 
-vertical_distance = 0.10  # 10 cm per plane
+vertical_distance = 0.10  # 10 cm between planes
 num_planes = 3
 ```
 
-1. Once everything is set up, run the Python script to start the data collection process.
+### Data Collection
 
-Run the following command:
+Execute the data collection process:
 
 ```bash
 python3 main.py
 ```
 
-The robot will move to each waypoint in the 3D workspace, and the camera will record marker positions.
+- Robot moves through waypoints.
+- Data saved to `calibration_data.csv`.
 
-All collected data will be saved to a file named: `calibration_data.csv`
+![Data Collection Process](/caribration/images/process_work_calibration.png)
 
-![process_work_calibration.png](caribration/images/process_work_calibration.png)
+### Calculating Affine Matrix
 
-
-1. After collecting the data, the next step is to calculate the **best affine transformation matrix** using the CSV file.
-
-Run the following command:
+Run the calibration script:
 
 ```bash
 python3 caribration-affine_matrix.py
 ```
 
-This script will:
+- Calculates the best affine transformation matrix.
+- Results saved in `best_matrix.json`.
 
-- Load the position data from `calibration_data.csv`
-- Calculate the best affine matrix using multiple iterations
-- Save the result to:`best_matrix.json`
+## Calibration Results
 
-This matrix allows the robot to understand positions from the camera’s view and convert them into robot coordinates.
+![Calibration Results](/caribration/images/result_matrix_calibration.png)
 
-## **Calibration Results**
-
-![result_matrix_calibration](caribration/images/result_matrix_calibration.png)
-
-After running 20,000 iterations, the system found the best affine matrix with a very low error.
+After 20,000 iterations:
 
 - **Best RMS Error**: 0.004
-- **Per Axis Error**:
-    - X: 0.002
-    - Y: 0.008
-    - Z: 0.003
+- **Axis Errors**:
+  - X: 0.002
+  - Y: 0.008
+  - Z: 0.003
 
-The matrix was saved to a file for later use. With this matrix, the robot can now accurately move based on the object position from the camera’s view.
+This matrix allows precise coordination between the camera and robot for accurate robot movements based on camera input.
+
+## Conclusion
+The calibration process ensures that the UR5e robot arm can accurately interpret camera data, enhancing its performance in tasks requiring precision and coordination. The use of an affine matrix allows for effective transformation between the camera and robot coordinate systems, ensuring reliable operation in various applications.
