@@ -30,18 +30,20 @@ class calibrationUR5e():
 
 
     def cam_relasense(self):
-        """
-        Launches the RealSense camera to obtain the board pose.
-        Returns the board pose (camera coordinate system) as a Point3D instance.
-        """
-
         aruco_dict = cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_1000)
         image_marked, point3d = self.cam.get_board_pose(aruco_dict)
         print("Camera measurement:", point3d)
         if image_marked is not None:
+            # Display the image with detected board
             cv.imshow("Detected Board", image_marked)
             cv.waitKey(5000)
             cv.destroyAllWindows()
+
+            # Save the image to a file with a unique name
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            save_path = os.path.join(os.path.dirname(__file__), "images", f"detected_board_{timestamp}.png")
+            cv.imwrite(save_path, image_marked)
+            print(f"Marked image saved to {save_path}")
         return point3d
     
     
