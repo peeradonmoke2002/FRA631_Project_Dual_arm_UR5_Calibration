@@ -7,6 +7,8 @@ import json
 import os
 from scipy.spatial.transform import Rotation as R
 import math # Math library
+import time
+import pathlib
 
 config_path = os.path.join(os.path.dirname(__file__), "..", "config", "cam.json")
 jsonObj = json.load(open(config_path))
@@ -190,6 +192,12 @@ class RealsenseCam:
         else:
             print("No markers detected.")
             return output_image, Point3D(0, 0, 0)
+
+    def save_image(self, image):
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        save_path = pathlib.Path(__file__).parent / f"images/detected_board_{timestamp}.png"
+        cv2.imwrite(save_path, image)
+        print(f"Marked image saved to {save_path}")
     
     def get_imu_frames(self):
         """

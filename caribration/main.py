@@ -40,10 +40,8 @@ class calibrationUR5e():
             cv.destroyAllWindows()
 
             # Save the image to a file with a unique name
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            save_path = os.path.join(os.path.dirname(__file__), "images", f"detected_board_{timestamp}.png")
-            cv.imwrite(save_path, image_marked)
-            print(f"Marked image saved to {save_path}")
+            self.cam.save_image(image_marked)
+       
         return point3d
     
     
