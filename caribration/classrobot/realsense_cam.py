@@ -178,9 +178,6 @@ class RealsenseCam:
             if depth > 0:
                 point_coords = rs.rs2_deproject_pixel_to_point(depth_intrinsics, [cx, cy], depth)
                 # Convert to Point3D 
-                # x = result[2]
-                # y = -point_coords[1]
-                # z = -point_coords[2]
                 x = point_coords[0]
                 y = point_coords[1]
                 z = point_coords[2]
@@ -193,116 +190,6 @@ class RealsenseCam:
         else:
             print("No markers detected.")
             return output_image, Point3D(0, 0, 0)
-
-    def get_board_pose_estimate(self, aruco_dict, camera_matrix, dist_coeffs, marker_length=0.05):
-        """
-        Estimates the 6DoF pose of the detected Aruco marker board using a hybrid approach:
-        - The rotation (rvec) is obtained from OpenCV’s estimatePoseSingleMarkers.
-        - The translation (tvec) is derived from the RealSense depth data.
-        
-        Parameters:
-        - aruco_dict: The dictionary used for marker detection 
-            (e.g., cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)).
-        - camera_matrix: The camera intrinsic matrix (3x3 numpy array).
-        - dist_coeffs: Distortion coefficients (numpy array).
-        - marker_length: The side length of the marker in meters (default is 0.05).
-        
-        Returns:
-        - output_image: The color image with detected markers and coordinate axes drawn.
-        - rvec: The rotation vector (from OpenCV) of the first detected marker, or None.
-        - tvec: The translation (as a Point3D) computed from the RealSense depth data, or a Point3D at (0,0,0).
-        """
-        # Capture color and depth frames.
-        color_image, depth_frame, depth_intrinsics = self.get_color_and_depth_frames()
-        if color_image is None or depth_frame is None:
-            print("Failed to capture color/depth.")
-            return None, None, Point3D(0, 0, 0)
-        
-        gray = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-        
-        # Create an Aruco detector and detect markers.
-        parameters = cv2.aruco.DetectorParameters()
-        detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
-        corners, ids, _ = detector.detectMarkers(gray)
-        output_image = color_image.copy()
-        
-        if ids is not None and len(ids) > 0:
-            # Draw detected markers for visualization.
-            cv2.aruco.drawDetectedMarkers(output_image, corners, ids)
-            
-            # Use estimatePoseSingleMarkers to obtain rvecs and tvecs for each marker.
-            rvecs, tvecs_dummy, _ = cv2.aruco.estimatePoseSingleMarkers(
-                corners,
-                markerLength=marker_length,
-                cameraMatrix=camera_matrix,
-                distCoeffs=dist_coeffs
-            )
-            
-            if rvecs is not None and len(rvecs) > 0:
-                # For the first detected marker, compute its center pixel.
-                pts = corners[0][0]  # 4 corners for marker 0
-                cx = int(np.mean(pts[:, 0]))
-                cy = int(np.mean(pts[:, 1]))
-                
-                # Use the RealSense depth data to compute a translation.
-                depth = depth_frame.get_distance(cx, cy)
-                if depth > 0:
-                    # Deproject the center pixel to 3D using the depth intrinsics.
-                    point_coords = rs.rs2_deproject_pixel_to_point(depth_intrinsics, [cx, cy], depth)
-                    tvec_depth = np.array([point_coords[0], point_coords[1], point_coords[2]]).reshape(1, 3)
-                    point3d = Point3D(tvec_depth[0][0], tvec_depth[0][1], tvec_depth[0][2])
-                else:
-                    print("Invalid depth at marker center.")
-                    return output_image, None, Point3D(0, 0, 0)
-                
-                # Draw coordinate axes for each detected marker using the computed tvec_depth.
-                for marker_index in range(len(rvecs)):
-                    cv2.drawFrameAxes(output_image, camera_matrix, dist_coeffs, 
-                                    rvecs[marker_index], tvec_depth.reshape(1, 3), marker_length)
-                    
-                # Use the first marker's rotation vector as the estimated rotation.
-                rvec = rvecs[0]
-                # Convert the rotation vector to a rotation matrix.
-                rot_matrix, _ = cv2.Rodrigues(rvec)
-                # Convert rotation matrix to quaternion and Euler angles via scipy.
-                r = R.from_matrix(rot_matrix)
-                quat = r.as_quat()   # in (x, y, z, w) order
-                roll, pitch, yaw = self.euler_from_quaternion(quat[0], quat[1], quat[2], quat[3])
-                print("Roll (deg):", math.degrees(roll))
-                print("Pitch (deg):", math.degrees(pitch))
-                print("Yaw (deg):", math.degrees(yaw))
-                print("Estimated translation from depth:", point3d)
-                print("Estimated rotation vector:", rvec.ravel())
-                
-                return output_image, rvec, point3d
-            else:
-                print("estimatePoseSingleMarkers returned no rotation data.")
-                return output_image, None, Point3D(0, 0, 0)
-        else:
-            print("No markers detected.")
-            return output_image, None, Point3D(0, 0, 0)
-
-    def euler_from_quaternion(self,x, y, z, w):
-        """
-        Convert a quaternion into euler angles (roll, pitch, yaw)
-        roll is rotation around x in radians (counterclockwise)
-        pitch is rotation around y in radians (counterclockwise)
-        yaw is rotation around z in radians (counterclockwise)
-        """
-        t0 = +2.0 * (w * x + y * z)
-        t1 = +1.0 - 2.0 * (x * x + y * y)
-        roll_x = math.atan2(t0, t1)
-            
-        t2 = +2.0 * (w * y - z * x)
-        t2 = +1.0 if t2 > +1.0 else t2
-        t2 = -1.0 if t2 < -1.0 else t2
-        pitch_y = math.asin(t2)
-            
-        t3 = +2.0 * (w * z + x * y)
-        t4 = +1.0 - 2.0 * (y * y + z * z)
-        yaw_z = math.atan2(t3, t4)
-            
-        return roll_x, pitch_y, yaw_z # in radians
     
     def get_imu_frames(self):
         """
