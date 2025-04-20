@@ -30,14 +30,13 @@ Repository for calibration between a camera and the UR5e robot arm.
 
 ## Installation
 
-> [!IMPORTANT]  
-> This Python package supports Python 3.11.x only. 
-> Check your Python version:
+> [!Note] This project's Python package is only supported on Python 3.11.XX and not beyond this version.
+> To be sure, you can check the version of Python by running the following command in your terminal:
 > ```bash
 > python --version
 > ```
 
-### Step 1: Clone the Repository
+step 1: Clone the repository
 
 ```bash
 git clone https://github.com/peeradonmoke2002/FRA631_Project_Dual_arm_UR5_Calibration.git
@@ -184,7 +183,4 @@ After 20,000 iterations:
   - Y: 0.008
   - Z: 0.003
 
-This matrix allows precise coordination between the camera and robot for accurate robot movements based on camera input.
-
-## Conclusion
-The calibration process ensures that the UR5e robot arm can accurately interpret camera data, enhancing its performance in tasks requiring precision and coordination. The use of an affine matrix allows for effective transformation between the camera and robot coordinate systems, ensuring reliable operation in various applications.
+The matrix was saved to a file for later use. With this matrix, the robot can now accurately move based on the object position from the camera’s view.
