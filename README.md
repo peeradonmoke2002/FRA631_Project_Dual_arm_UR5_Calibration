@@ -8,13 +8,13 @@ Repo for Calibration between camera and UR5e (Robot Arm)
 
 ## Installation
 
-> [!Note] This project's Python package is only supported on Python 3.11.XX and not beyond this version.
+> [!IMPORTANT]
+> This project's Python package is only supported on Python 3.11.XX and not beyond this version.
 > To be sure, you can check the version of Python by running the following command in your terminal:
 > ```bash
 > python --version
 > ```
 
-step 1: Clone the repository
 
 ```bash
 git clone https://github.com/peeradonmoke2002/FRA631_Project_Dual_arm_UR5_Calibration.git
