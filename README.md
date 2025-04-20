@@ -37,7 +37,7 @@ Repository for calibration between a camera and the UR5e robot arm.
 > python --version
 > ```
 
-step 1: Clone the repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/peeradonmoke2002/FRA631_Project_Dual_arm_UR5_Calibration.git
