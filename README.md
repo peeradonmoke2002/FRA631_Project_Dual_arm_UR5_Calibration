@@ -57,7 +57,7 @@ source calibration_venv/bin/activate
 ```powershell
 set-executionpolicy -Scope CurrentUser -ExecutionPolicy Unrestricted
 python -m venv calibration_venv
-venv\Scripts\Activate.ps1
+calibration_venv\Scripts\Activate.ps1
 ```
 
 ### Step 3: Install Dependencies
