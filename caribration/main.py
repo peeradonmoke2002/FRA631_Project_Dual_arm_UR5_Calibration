@@ -13,8 +13,8 @@ class calibrationUR5e():
         # End effector home position (6 DOF) and other test positions
         self.HOME_POS = [0.701172053107018, 0.184272460738082, 0.1721568294843568, -1.7318488600590023, 0.686830145115122, -1.731258978679887]
         self.robot_ip = "192.168.200.10"
-        self.speed = 0.1
-        self.acceleration = 1.2
+        self.speed = 0.5
+        self.acceleration = 0.5
         # Initialize the robot connection once.
         self.robot = robot_movement.RobotControl()
         self.robot.robot_release()
@@ -58,7 +58,7 @@ class calibrationUR5e():
 
     def move_home(self):
         print("Moving to home position...")
-        self.robot.robot_moveL(self.HOME_POS, self.speed)
+        self.robot.robot_moveL(self.HOME_POS, self.speed, self.acceleration)
 
 
     def moveL_square(self):
@@ -174,8 +174,8 @@ class calibrationUR5e():
                 target = pos + RPY
                 state = plane_idx * 10 + idx + 1
                 print(f"Moving to plane {plane_idx+1} grid cell ({i},{j}) - Target: {target}")
-                self.robot.robot_moveL(target, self.speed)
-                time.sleep(3)  # Pause for the robot to settle
+                self.robot.robot_moveL(target, self.speed, self.acceleration)
+                time.sleep(6)  # Pause for the robot to settle
                 
                 if self.collect_data(state=state):
                     print(f"Data collection successful for state {state}.")

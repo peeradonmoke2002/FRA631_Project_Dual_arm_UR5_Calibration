@@ -229,8 +229,8 @@ class RobotControl:
         res = [position[0], position[1], position[2]]
 
         # translation
-        res[0] += 0.18
-        res[1] += 0.18
+        res[0] += 0.116
+        res[1] += 0.187
 
         return res
           

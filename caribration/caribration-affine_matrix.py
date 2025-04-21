@@ -62,7 +62,7 @@ data = {
     "matrix": best_matrix.tolist()
 }
 
-config_path = pathlib.Path(__file__).parent.parent / "config" / "best_matrix.json"
+config_path = pathlib.Path(__file__).parent / "config" / "best_matrix.json"
 print(f"Saving best matrix to {config_path}")
 
 # Ensure the parent directory exists (but do not recreate if it already exists).

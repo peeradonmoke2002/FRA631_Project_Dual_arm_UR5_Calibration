@@ -195,7 +195,7 @@ class RealsenseCam:
 
     def save_image(self, image):
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        save_path = pathlib.Path(__file__).parent / f"images/detected_board_{timestamp}.png"
+        save_path = pathlib.Path(__file__).parent.parent / f"images/detected_board_{timestamp}.png"
         cv2.imwrite(save_path, image)
         print(f"Marked image saved to {save_path}")
     
